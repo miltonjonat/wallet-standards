@@ -1,114 +1,99 @@
-# TODO: properly reference JSON/YAML framework schema
+info:
+  title: Cartesi Rollup Wallet Specification
+  version: 0.1.0
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  description: |
+    APIs for standard Cartesi Rollups wallet operations
 
-wallet:
-  summary: "Wallet Standards"
-  description: "Operations for managing assets, including deposits, withdrawals, transfers, and balance inquiries"
-
-  inspects:
-    /balance/{address}/{asset_type}:
-      summary: "Query the balance of a given address"
-      parameters:
-        - in: path
-          name: address
-          description: "Address whose balance will be returned"
-          required: true
-          schema:
+inspects:
+  /balance/{address}:
+    summary: "Query the balance of a given address"
+    parameters:
+      - in: path
+        name: address
+        description: "Address whose balance will be returned"
+        required: true
+        schema:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+    response:
+      # TODO: add erc1155
+      #
+      # Sample response:
+      # {
+      #   “ether”: 0x0..64,
+      #   “erc20”: {
+      #     // erc20 address -> amount
+      #     “0x491…B5D”: 0x0..64
+      #   },
+      #   “erc721”: {
+      #     // erc721 address -> array of token IDs
+      #     “0xabc…abc”: [0x0..01, 0x0..2a]
+      #   }
+      # }
+      contentType: application/json
+      encoding:
+        type: object
+        properties:
+          ether:
             type: string
-            format: hex
-        - in: path
-          name: asset_type
-          description: "Restrict balance query to specific asset type"
-          required: false
-          schema:
-            type: string
-            enum: [ether, erc20, erc721, erc1155single, erc1155batch]
-      response:
-        # TODO: add erc1155
-        #
-        # Sample response:
-        # {
-        #   “ether”: 0x0..64,
-        #   “erc20”: {
-        #     // erc20 address -> amount
-        #     “0x491…B5D”: 0x0..64
-        #   },
-        #   “erc721”: {
-        #     // erc721 address -> array of token IDs
-        #     “0xabc…abc”: [0x0..01, 0x0..2a]
-        #   }
-        # }
-        contentType: application/json
-        encoding: |
-        {
-          "type": "object"
-          "properties": {
-            "ether": {
-              "type: "string",
-              "pattern": "^0x[0-9a-fA-F]{64}$"
-            }
-            "erc20": {
-              "type": "object"
-              "patternProperties": {
-                "^0x[a-fA-F0-9]{40}$": {
-                  "type: "string",
-                  "pattern": "^0x[0-9a-fA-F]{64}$"
-                }
-              }              
-            }
-            "erc721": {
-              "type": "object",
-              "patternProperties": {
-                "^0x[a-fA-F0-9]{40}$": {
-                  "type": "array",
-                  "items": {
-                    "type: "string",
-                    "pattern": "^(?!0x0$)0x[0-9a-fA-F]{64}$"
-                  }
-                }
-              }
-            }
-          }
-        }
+            pattern: "^0x[0-9a-fA-F]{64}$"
+          erc20:
+            type: object
+            patternProperties:
+              "^0x[a-fA-F0-9]{40}$":
+                type: string
+                pattern: "^0x[0-9a-fA-F]{64}$"
+          erc721:
+            type: object
+            patternProperties:
+              "^0x[a-fA-F0-9]{40}$":
+                type: array
+                items:
+                  type: string
+                  pattern: "^(?!0x0$)0x[0-9a-fA-F]{64}$"
 
-  advances:
-    deposit_erc20:
-      summary: "Deposit ERC-20"
-      description: "Operation of depositing ERC-20 tokens so that they are teleported to the execution layer"
-      input:
-        msg_sender:
-          description: "Address of the ERC20Portal contract"
-          value: ERC20Portal
-        payload:
-          contentType: ethereum/abi-packed
-          encoding: "bool success, address token, address sender, uint256 amount, bytes execLayerData"
-      notices:
-        - description: "Attests to a successful ERC-20 deposit and informs updated balance on the execution layer"
-          contentType: ethereum/abi
-          encoding: "address token, address sender, uint256 depositAmount, uint256 balanceAmount"
-      reports:
-        - report: "Informs about any errors raised during the ERC-20 deposit operation"
-          contentType: text/plain # application/json with some structure?
+advances:
+  ERC20_Deposit:
+    summary: "Deposit ERC-20"
+    description: "Operation of depositing ERC-20 tokens so that they are teleported to the execution layer"
+    input:
+      msg_sender:
+        description: "Address of the ERC20Portal contract"
+        value: ERC20Portal
+      payload:
+        contentType: ethereum/abi-packed
+        encoding: "bool success, address token, address sender, uint256 amount, bytes execLayerData"
+    notices:
+      - description: "Attests to a successful ERC-20 deposit and informs updated balance on the execution layer"
+        contentType: ethereum/abi
+        encoding: "address token, address sender, uint256 depositAmount, uint256 balanceAmount"
+    reports:
+      - report: "Informs about any errors raised during the ERC-20 deposit operation"
+        contentType: text/plain # application/json with some structure?
 
-    withdraw_erc20:
-      summary: "Withdraw ERC-20"
-      description: "Operation of withdrawing ERC-20 tokens from the sender's balance on the execution layer, so that they are teleported back to the base layer"
-      input:
-        msg_sender:
-          description: "Address of the token owner"
+  ERC20_Withdraw:
+    summary: "Withdraw ERC-20"
+    description: "Operation of withdrawing ERC-20 tokens from the sender's balance on the execution layer, so that they are teleported back to the base layer"
+    input:
+      msg_sender:
+        description: "Address of the token owner"
+      payload:
+        contentType: ethereum/abi
+        encoding: "address token, uint256 amount, bytes execLayerData"
+    vouchers:
+      - description: "Transfers ERC-20 tokens from the DApp to the owner on the base layer"
+        destination:
+          description: "Address of the ERC-20 token contract of interest, should match the `token` parameter of the input"
         payload:
-          contentType: ethereum/abi
-          encoding: "address token, uint256 amount, bytes execLayerData"
-      vouchers:
-        - description: "Transfers ERC-20 tokens from the DApp to the owner on the base layer"
-          destination:
-            description: "Address of the ERC-20 token contract of interest, should match the `token` parameter of the input"
-          payload:
-            description: "Simple ERC-20 transfer call (Ref: https://eips.ethereum.org/EIPS/eip-20#transfer) where the values of `address` and `uint256` should match the input values for `msg_sender` and `amount` respectively"
-            signature: "transfer(address, uint256)"
-      notices:
-        - description: "Attests to a successful ERC-20 withdrawal and informs updated balance on the execution layer"
-          contentType: ethereum/abi
-          encoding: "address token, address sender, uint256 withdrawalAmount, uint256 balanceAmount"
-      reports:
-        - report: "Informs about any errors raised during the ERC-20 withdrawal operation"
-          contentType: text/plain # application/json with some structure?
+          description: "Simple ERC-20 transfer call (Ref: https://eips.ethereum.org/EIPS/eip-20#transfer) where the values of `address` and `uint256` should match the input values for `msg_sender` and `amount` respectively"
+          signature: "transfer(address, uint256)"
+    notices:
+      - description: "Attests to a successful ERC-20 withdrawal and informs updated balance on the execution layer"
+        contentType: ethereum/abi
+        encoding: "address token, address sender, uint256 withdrawalAmount, uint256 balanceAmount"
+    reports:
+      - report: "Informs about any errors raised during the ERC-20 withdrawal operation"
+        contentType: text/plain # application/json with some structure?
