@@ -1,5 +1,6 @@
 # general information
 info:
+  name: "framework-name"
   title: "Title of the framework"
   version: x.y.z
   license:
@@ -19,7 +20,7 @@ inspects:
         name: "param_name"
         description: "Description of the parameter"
         required: true | false
-        schema: 
+        schema:
           # standard open-api schema definition
           type: string | number | integer | boolean | array | object | ...
           format: uuid | float | ...
@@ -41,6 +42,7 @@ advances:
         description: "Explains which contract or agent is expected to send the input"
         value: <Contract name> | <empty>
       payload:
+        header: true | false
         contentType: ethereum/abi | ethereum/abi-packed | application/json | text/plain | ...
         encoding: <ABI string> | <json schema> | ...
     vouchers:
