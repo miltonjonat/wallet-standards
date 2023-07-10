@@ -46,17 +46,21 @@ advances:
         contentType: ethereum/abi | ethereum/abi-packed | application/json | text/plain | ...
         encoding: <ABI string> | <json schema> | ...
     vouchers:
-      - destination:
+      <voucher_name>:
+        destination:
           description: "Explains which contract is the expected destination for the voucher"
           value: <Contract name> | <empty>
         payload:
           description: "Adds relevant information about the expected voucher payload content and encoding"
           signature: <ABI function signature>
     notices:
-      - description: "Adds relevant information about the expected notice payload content and encoding"
+      <notice_name>:
+        description: "Adds relevant information about the expected notice payload content and encoding"
+        header: true | false
         contentType: ethereum/abi | ethereum/abi-packed | application/json | text/plain | ...
         encoding: <ABI string> | <json schema> | ...
     reports:
-      - description: "Adds relevant information about the expected report payload content and encoding"
+      <report_name>:
+        description: "Adds relevant information about the expected report payload content and encoding"
         contentType: ethereum/abi | ethereum/abi-packed | application/json | text/plain | ...
         encoding: <ABI string> | <json schema> | ...
