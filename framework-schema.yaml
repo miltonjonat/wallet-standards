@@ -1,0 +1,66 @@
+# general information
+info:
+  name: "framework-name"
+  title: "Title of the framework"
+  version: x.y.z
+  license:
+    name: "license name"
+    url: https://license.url
+  description: "Description of the purpose of the framework"
+
+# inspect requests
+# - responses are synchronous
+inspects:
+  # based on OpenAPI spec, except for `response`
+  <path>:
+    summary: "Title of the inspect operation"
+    description: "Description of the inspect operation"
+    parameters:
+      - in: path | query
+        name: "param_name"
+        description: "Description of the parameter"
+        required: true | false
+        schema:
+          # standard open-api schema definition
+          type: string | number | integer | boolean | array | object | ...
+          format: uuid | float | ...
+          minimum: ..
+          maximum: ..
+          items: ...
+    response:
+      contentType: ethereum/abi | ethereum/abi-packed | application/json | text/plain | ...
+      encoding: <ABI string> | <json schema> | ...
+
+# advance requests
+# - outputs/responses are given asynchronously in the form of vouchers, notices and reports
+advances:
+  <advance_name>:
+    summary: "Title of the advance operation"
+    description: "Description of the advance operation"
+    input:
+      msg_sender:
+        description: "Explains which contract or agent is expected to send the input"
+        value: <Contract name> | <empty>
+      payload:
+        header: true | false
+        contentType: ethereum/abi | ethereum/abi-packed | application/json | text/plain | ...
+        encoding: <ABI string> | <json schema> | ...
+    vouchers:
+      <voucher_name>:
+        destination:
+          description: "Explains which contract is the expected destination for the voucher"
+          value: <Contract name> | <empty>
+        payload:
+          description: "Adds relevant information about the expected voucher payload content and encoding"
+          signature: <ABI function signature>
+    notices:
+      <notice_name>:
+        description: "Adds relevant information about the expected notice payload content and encoding"
+        header: true | false
+        contentType: ethereum/abi | ethereum/abi-packed | application/json | text/plain | ...
+        encoding: <ABI string> | <json schema> | ...
+    reports:
+      <report_name>:
+        description: "Adds relevant information about the expected report payload content and encoding"
+        contentType: ethereum/abi | ethereum/abi-packed | application/json | text/plain | ...
+        encoding: <ABI string> | <json schema> | ...
